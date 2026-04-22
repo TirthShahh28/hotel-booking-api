@@ -39,3 +39,20 @@ Thumbs.db
 
 # Docker
 .docker/
+
+# AI / agent tooling (keep repo clean of scratchpads, agent configs, chat dumps)
+.claude/
+.claude*
+CLAUDE.md
+.anthropic/
+.anthropic*
+.cursor/
+.aider*
+.windsurf/
+.continue/
+.copilot/
+.codebuff/
+*.agent.md
+*.plan.md
+scratch/
+.notes/
