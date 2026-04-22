@@ -14,6 +14,7 @@ from app.db.base import Base  # noqa: E402
 from app.db.session import get_db  # noqa: E402
 from app.main import app  # noqa: E402
 from app.models import hotel as _hotel_model  # noqa: E402, F401
+from app.models import inventory as _inventory_model  # noqa: E402, F401
 from app.models import user as _user_model  # noqa: E402, F401 — register models
 
 
