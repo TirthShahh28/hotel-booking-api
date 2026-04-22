@@ -6,6 +6,7 @@ from app.core.deps import require_admin
 from app.db.session import get_db
 from app.models.hotel import Hotel, Room
 from app.models.user import User
+from app.services.inventory import seed_room_inventory
 from app.schemas.hotel import (
     HotelCreate,
     HotelOut,
@@ -78,6 +79,8 @@ async def create_room(
     await _get_owned_hotel(hotel_id, admin, db)
     room = Room(hotel_id=hotel_id, **body.model_dump())
     db.add(room)
+    await db.flush()
+    await seed_room_inventory(db, room_id=room.id, total_units=1)
     await db.commit()
     await db.refresh(room)
     return room
