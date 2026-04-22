@@ -11,6 +11,7 @@ from app.db.base import Base
 from app.models import booking as _booking  # noqa: F401
 from app.models import hotel as _hotel  # noqa: F401
 from app.models import inventory as _inventory  # noqa: F401
+from app.models import payment as _payment  # noqa: F401
 from app.models import user as _user  # noqa: F401
 
 # Import models so they register with Base.metadata
