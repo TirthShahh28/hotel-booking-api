@@ -9,8 +9,6 @@ from app.core.config import settings
 from app.models.booking import Booking, BookingStatus, Guest
 from app.models.hotel import Room
 from app.services.inventory import (
-    SoldOutError,
-    decrement_inventory,
     iter_nights,
     lock_inventory_rows,
     restore_inventory,
@@ -55,7 +53,8 @@ async def init_booking(
     if room is None:
         raise BookingError("room not found")
 
-    # Lock nights first so pricing sees a consistent snapshot and decrement uses the same rows.
+    # Single lock acquisition: pricing sees the pre-decrement snapshot, then we decrement
+    # the same rows under the same lock. No double-lock, no race between price and decrement.
     nights = iter_nights(check_in, check_out)
     inventory_rows = await lock_inventory_rows(db, room_id=room_id, nights=nights)
 
@@ -69,10 +68,10 @@ async def init_booking(
         )
     )
 
-    try:
-        await decrement_inventory(db, room_id=room_id, check_in=check_in, check_out=check_out)
-    except SoldOutError as exc:
-        raise BookingError(str(exc)) from exc
+    if any(row.available_units <= 0 for row in inventory_rows):
+        raise BookingError("room is sold out for one or more nights in the requested range")
+    for row in inventory_rows:
+        row.available_units -= 1
 
     booking = Booking(
         user_id=user_id,
