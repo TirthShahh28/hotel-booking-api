@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 
 import pytest
 from httpx import AsyncClient
@@ -181,7 +181,7 @@ async def test_reaper_releases_stale_reservations(db_session: AsyncSession) -> N
         status=BookingStatus.RESERVED,
         total_price_cents=15000,
     )
-    booking.created_at = datetime.now(timezone.utc) - timedelta(hours=1)
+    booking.created_at = datetime.now(UTC) - timedelta(hours=1)
     db_session.add(booking)
     await db_session.commit()
 

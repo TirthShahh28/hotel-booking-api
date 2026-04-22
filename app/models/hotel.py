@@ -15,9 +15,7 @@ class Hotel(Base):
     address: Mapped[str] = mapped_column(String(500), nullable=False)
     owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
 
-    rooms: Mapped[list["Room"]] = relationship(
-        back_populates="hotel", cascade="all, delete-orphan"
-    )
+    rooms: Mapped[list[Room]] = relationship(back_populates="hotel", cascade="all, delete-orphan")
 
 
 class Room(Base):

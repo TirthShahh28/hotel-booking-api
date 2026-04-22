@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -129,7 +129,7 @@ async def confirm_booking(db: AsyncSession, booking: Booking) -> Booking:
 
 async def reap_expired_reservations(db: AsyncSession) -> int:
     """Release RESERVED bookings older than the hold window. Returns count reaped."""
-    cutoff = datetime.now(timezone.utc) - timedelta(minutes=settings.reservation_hold_minutes)
+    cutoff = datetime.now(UTC) - timedelta(minutes=settings.reservation_hold_minutes)
     stmt = select(Booking).where(
         Booking.status == BookingStatus.RESERVED,
         Booking.created_at < cutoff,

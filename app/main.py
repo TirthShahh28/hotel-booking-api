@@ -1,6 +1,6 @@
-from fastapi import FastAPI
-
 from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
 
 from app.api import auth, bookings, health, hotels, hotels_admin, payments, webhooks
 from app.core.config import settings

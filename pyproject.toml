@@ -34,11 +34,14 @@ dev = [
 ]
 
 [tool.ruff]
-line-length = 100
+line-length = 120
 target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "W", "UP", "B", "C4", "SIM"]
+# B008: Depends() in FastAPI default args is the recommended pattern, not a bug.
+# UP042: `str, enum.Enum` is the idiomatic SQLAlchemy pattern; StrEnum has surprise semantics with SQLAlchemy Enum.
+ignore = ["B008", "UP042"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

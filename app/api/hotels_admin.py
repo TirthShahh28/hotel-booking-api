@@ -6,7 +6,6 @@ from app.core.deps import require_admin
 from app.db.session import get_db
 from app.models.hotel import Hotel, Room
 from app.models.user import User
-from app.services.inventory import seed_room_inventory
 from app.schemas.hotel import (
     HotelCreate,
     HotelOut,
@@ -15,6 +14,7 @@ from app.schemas.hotel import (
     RoomOut,
     RoomUpdate,
 )
+from app.services.inventory import seed_room_inventory
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
