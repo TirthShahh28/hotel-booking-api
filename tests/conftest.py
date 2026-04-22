@@ -13,7 +13,8 @@ os.environ.setdefault("JWT_SECRET", "test-secret")
 from app.db.base import Base  # noqa: E402
 from app.db.session import get_db  # noqa: E402
 from app.main import app  # noqa: E402
-from app.models import user as _user_model  # noqa: E402, F401 — register model
+from app.models import hotel as _hotel_model  # noqa: E402, F401
+from app.models import user as _user_model  # noqa: E402, F401 — register models
 
 
 @pytest_asyncio.fixture
