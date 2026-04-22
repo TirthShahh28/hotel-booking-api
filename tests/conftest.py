@@ -17,6 +17,7 @@ from app.main import app  # noqa: E402
 from app.models import booking as _booking_model  # noqa: E402, F401
 from app.models import hotel as _hotel_model  # noqa: E402, F401
 from app.models import inventory as _inventory_model  # noqa: E402, F401
+from app.models import payment as _payment_model  # noqa: E402, F401
 from app.models import user as _user_model  # noqa: E402, F401 — register models
 
 
