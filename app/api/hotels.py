@@ -1,13 +1,15 @@
 from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.db.session import get_db
 from app.models.hotel import Hotel, Room
+from app.models.inventory import RoomInventory
 from app.schemas.hotel import HotelOut, HotelWithRooms
+from app.services.inventory import iter_nights
 
 router = APIRouter(prefix="/hotels", tags=["hotels"])
 
@@ -28,7 +30,22 @@ async def search_hotels(
         .where(Hotel.city.ilike(city))
         .distinct()
     )
-    # Availability date filtering layered in via inventory table (milestone 4).
+
+    if check_in and check_out:
+        nights = iter_nights(check_in, check_out)
+        # A room is available iff every night in range has available_units > 0.
+        # Count matching inventory rows per room; only keep rooms where count == len(nights).
+        available_rooms = (
+            select(RoomInventory.room_id)
+            .where(
+                RoomInventory.date.in_(nights),
+                RoomInventory.available_units > 0,
+            )
+            .group_by(RoomInventory.room_id)
+            .having(func.count(RoomInventory.id) == len(nights))
+        )
+        stmt = stmt.where(Room.id.in_(available_rooms))
+
     result = await db.scalars(stmt)
     return list(result.all())
 
