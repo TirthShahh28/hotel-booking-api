@@ -55,6 +55,50 @@ alembic/        # migrations
 tests/
 ```
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Client[Client] -->|REST| API[FastAPI]
+    API -->|SQLAlchemy async| DB[(PostgreSQL)]
+    API -->|PaymentIntent| Stripe
+    Stripe -->|Signed webhook| API
+    Reaper[APScheduler reaper] --> API
+    subgraph Domain
+      Auth[auth]
+      Hotels[hotels & rooms]
+      Inventory[room_inventory<br/>FOR UPDATE]
+      Bookings[booking state machine]
+      Pricing[PricingEngine<br/>Strategy pattern]
+      Payments[payments + webhooks]
+    end
+    API --- Auth
+    API --- Hotels
+    API --- Inventory
+    API --- Bookings
+    API --- Pricing
+    API --- Payments
+```
+
+## Booking flow
+
+```
+POST /bookings/init
+  ├── SELECT ... FOR UPDATE on room_inventory for every night
+  ├── PricingEngine.compute(snapshot)
+  ├── Decrement available_units in-place
+  └── INSERT booking RESERVED + commit
+
+POST /bookings/{id}/payments
+  └── Stripe PaymentIntent (idempotency_key = booking-{id})
+
+POST /webhooks/stripe
+  ├── Verify HMAC signature
+  ├── Dedupe by event.id via processed_stripe_events
+  ├── payment_intent.succeeded → booking RESERVED → CONFIRMED
+  └── payment_intent.payment_failed → payment FAILED (booking stays RESERVED for retry)
+```
+
 ## Design decisions
 
 See [docs/DESIGN.md](docs/DESIGN.md) — covers the concurrency model, state machine, pricing strategy, and Stripe integration.
