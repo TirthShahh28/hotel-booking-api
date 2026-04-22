@@ -2,7 +2,7 @@ from fastapi import FastAPI
 
 from contextlib import asynccontextmanager
 
-from app.api import auth, bookings, health, hotels, hotels_admin
+from app.api import auth, bookings, health, hotels, hotels_admin, payments, webhooks
 from app.core.config import settings
 from app.services.reaper import start_reaper
 
@@ -29,6 +29,8 @@ app.include_router(auth.router)
 app.include_router(hotels.router)
 app.include_router(hotels_admin.router)
 app.include_router(bookings.router)
+app.include_router(payments.router)
+app.include_router(webhooks.router)
 
 
 @app.get("/")
