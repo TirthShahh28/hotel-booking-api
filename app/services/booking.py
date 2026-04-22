@@ -12,8 +12,10 @@ from app.services.inventory import (
     SoldOutError,
     decrement_inventory,
     iter_nights,
+    lock_inventory_rows,
     restore_inventory,
 )
+from app.services.pricing import PricingContext, PricingEngine, default_engine
 
 # Explicit state machine. Any transition not listed is illegal — interviewers love this.
 ALLOWED_TRANSITIONS: dict[BookingStatus, set[BookingStatus]] = {
@@ -36,35 +38,41 @@ def assert_transition(current: BookingStatus, target: BookingStatus) -> None:
         raise InvalidTransition(f"cannot transition {current.value} -> {target.value}")
 
 
-def _flat_price(room: Room, check_in: date, check_out: date) -> int:
-    """Milestone-5 placeholder. Strategy-based pricing arrives in milestone 6."""
-    nights = len(iter_nights(check_in, check_out))
-    return room.base_price_cents * nights
-
-
 async def init_booking(
     db: AsyncSession,
     user_id: int,
     room_id: int,
     check_in: date,
     check_out: date,
-    price_cents: int | None = None,
+    engine: PricingEngine | None = None,
 ) -> Booking:
     """Acquire inventory locks, decrement, and create a RESERVED booking.
 
-    price_cents is injected from the pricing engine in milestone 6; falls back to
-    base * nights when not provided so this function stays testable in isolation.
+    Pricing is computed from the current inventory snapshot (pre-decrement) so
+    the customer pays the rate that matches the market state when they booked.
     """
     room = await db.get(Room, room_id)
     if room is None:
         raise BookingError("room not found")
 
+    # Lock nights first so pricing sees a consistent snapshot and decrement uses the same rows.
+    nights = iter_nights(check_in, check_out)
+    inventory_rows = await lock_inventory_rows(db, room_id=room_id, nights=nights)
+
+    engine = engine or default_engine()
+    total = engine.compute(
+        PricingContext(
+            base_price_cents=room.base_price_cents,
+            check_in=check_in,
+            check_out=check_out,
+            inventory_rows=inventory_rows,
+        )
+    )
+
     try:
         await decrement_inventory(db, room_id=room_id, check_in=check_in, check_out=check_out)
     except SoldOutError as exc:
         raise BookingError(str(exc)) from exc
-
-    total = price_cents if price_cents is not None else _flat_price(room, check_in, check_out)
 
     booking = Booking(
         user_id=user_id,
