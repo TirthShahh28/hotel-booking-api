@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from app.core.config import settings
 from app.db.base import Base
+from app.models import booking as _booking  # noqa: F401
 from app.models import hotel as _hotel  # noqa: F401
 from app.models import inventory as _inventory  # noqa: F401
 from app.models import user as _user  # noqa: F401
